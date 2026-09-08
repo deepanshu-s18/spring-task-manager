@@ -68,17 +68,17 @@ jobs:
       - name: Build Docker image
         run: docker build -t spring-task-manager:${{ github.sha }} .
 
-      - name: Log in to Docker Hub
+      - name: Push to Docker Hub (optional)
         if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-        continue-on-error: true
-
-      - name: Push Docker image
-        if: github.ref == 'refs/heads/main'
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
         run: |
-          docker tag spring-task-manager:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/spring-task-manager:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/spring-task-manager:latest
-        continue-on-error: true
+          if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_TOKEN" ]; then
+            echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker tag spring-task-manager:${{ github.sha }} "$DOCKER_USERNAME/spring-task-manager:latest"
+            docker push "$DOCKER_USERNAME/spring-task-manager:latest"
+            echo "Successfully pushed Docker image to $DOCKER_USERNAME/spring-task-manager:latest"
+          else
+            echo "Docker Hub credentials not configured (DOCKER_USERNAME / DOCKER_TOKEN). Skipping push."
+          fi
