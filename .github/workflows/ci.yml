@@ -25,6 +25,16 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,6 +54,8 @@ jobs:
           DB_USERNAME: testuser
           DB_PASSWORD: testpass
           JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+          SPRING_DATA_REDIS_HOST: localhost
+          SPRING_DATA_REDIS_PORT: 6379
 
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4
