@@ -1,5 +1,6 @@
 package com.deepanshu.taskmanager.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
@@ -27,28 +28,23 @@ public class CacheConfig {
     public static final String CACHE_TASKS       = "tasks";
     public static final String CACHE_USER_DETAIL = "userDetails";
 
-    /**
-     * ObjectMapper configured for Redis serialization:
-     * - JavaTimeModule: handles LocalDateTime / Instant without errors
-     * - activateDefaultTyping: embeds @class so deserialization works correctly
-     */
-    @Bean(name = "redisObjectMapper")
-    public ObjectMapper redisObjectMapper() {
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
+        // Dedicated ObjectMapper for Redis cache only (NOT a @Bean).
+        // If exposed as a @Bean, Spring Boot uses it for HTTP MVC requests,
+        // which breaks normal JSON request body deserialization due to default typing.
         PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator
             .builder()
             .allowIfSubType(Object.class)
             .build();
 
-        return new ObjectMapper()
+        ObjectMapper redisMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
-    }
+            .activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
 
-    @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         GenericJackson2JsonRedisSerializer jsonSerializer =
-            new GenericJackson2JsonRedisSerializer(redisObjectMapper());
+            new GenericJackson2JsonRedisSerializer(redisMapper);
 
         // Default: 10-minute TTL, JSON serialization with JavaTimeModule
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
