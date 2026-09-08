@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskmanager_db
+    environment:
+      POSTGRES_DB: taskmanager
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskuser -d taskmanager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: taskmanager_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: taskmanager_app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/taskmanager
+      - DB_USERNAME=taskuser
+      - DB_PASSWORD=taskpass
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
