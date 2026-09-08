@@ -123,9 +123,10 @@ public class ApiResponse {
         LocalDateTime timestamp;
     }
 
-    @Value
-    @Builder
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class MessageResponse {
-        String message;
+        private String message;
     }
 }
