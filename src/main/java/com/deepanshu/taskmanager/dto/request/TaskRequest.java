@@ -20,6 +20,7 @@ public class TaskRequest {
         @Size(max = 1000, message = "Description must be at most 1000 characters")
         private String description;
 
+        @Builder.Default
         private Task.Priority priority = Task.Priority.MEDIUM;
 
         @Future(message = "Due date must be in the future")
