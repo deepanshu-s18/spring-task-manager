@@ -53,6 +53,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/taskmanager_test
           DB_USERNAME: testuser
           DB_PASSWORD: testpass
+          DB_DRIVER: org.postgresql.Driver
           JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379

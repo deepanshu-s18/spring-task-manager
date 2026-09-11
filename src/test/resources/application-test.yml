@@ -1,15 +1,14 @@
-# Test profile — uses PostgreSQL service container in CI (GitHub Actions)
-# and can also be run locally with: docker-compose up postgres
+# Test profile — in-memory H2 (PostgreSQL compatibility mode) for zero-dependency tests,
+# or overridden via SPRING_DATASOURCE_URL in CI if a Postgres container is provisioned.
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/taskmanager_test}
-    username: ${DB_USERNAME:testuser}
-    password: ${DB_PASSWORD:testpass}
-    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:taskmanager_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: create-drop     # recreate schema on each test run
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
   flyway:
     enabled: false              # Hibernate manages schema in tests (DDL auto)
